@@ -23,6 +23,7 @@ Then open http://localhost:3000. `npm run build` produces the production build;
   No Tailwind, no animation library, no component kit, no canvas or WebGL.
 - Illustration: hand-built inline SVG in five parallax planes.
 - Motion: CSS transitions and keyframes on `transform` / `opacity` only.
+- Audio: one locally hosted `<audio>` element. No autoplay, no audio library.
 - State: React + `localStorage`. Nothing is sent anywhere.
 
 ## Architecture
@@ -40,7 +41,7 @@ components/
                         accessibility, demo controls
   DayOverlay.tsx        the daily chapter (modal on desktop, sheet on mobile)
   DayMarker.tsx         one activation zone: medallion / star / lantern / …
-  DemoBar.tsx           the discreet prototype utility bar
+  DemoChip.tsx          the discreet preview marker on the scene
   Toasts.tsx            toasts + the placeholder "Go deeper" panel
   Icons.tsx             interface icons and 24 day icons
   piazza/               the illustration, one file per parallax plane
@@ -50,6 +51,7 @@ data/
   sceneConfig.ts        viewBoxes, parallax depths, the four scene stages
 hooks/
   useAdventProgress.ts  progress, unlocking and demo modes
+  useAmbientAudio.ts    playback, fades and the sound preference
   useLocalStorage.ts    hydration-safe persistence
   useMediaQuery.ts      reduced motion + compact breakpoint
   useDialog.ts          focus trap, Escape, focus restoration
@@ -59,6 +61,18 @@ lib/
 types/
   advent.ts             domain types
 ```
+
+## Ambient sound
+
+`public/audio/snowfall-scott-buckley.mp3` — “Snowfall” by Scott Buckley, CC BY 4.0
+(see `CREDITS.md`).
+
+- Nothing plays until the visitor presses the sound button. The element carries
+  no `autoplay` attribute and `preload="none"`, so the file is not fetched at all
+  until it is asked for.
+- Loops, sits at volume `0.16`, and fades in and out over 650ms.
+- The preference persists. A returning visitor who left sound on gets it back on
+  their first interaction with the page — still a gesture, still never unprompted.
 
 ## The four scene stages
 
@@ -80,7 +94,8 @@ Opening an individual day also lights that day's own corner of the illustration
 Real behaviour: during December, days 1…today are unlocked and later days stay
 locked; opened and completed days persist on the device.
 
-The prototype ships with a **Demo preview** control (bottom bar and menu):
+The scene itself carries only a small, low-contrast **Preview** chip in the corner
+showing which mode is running. Pressing it opens the journey menu at the controls:
 
 - **Today** — true date-gated behaviour.
 - **Preview all days** — all 24 unlocked. This is the default so the calendar can
@@ -90,6 +105,9 @@ The prototype ships with a **Demo preview** control (bottom bar and menu):
 - **Reset** — clears `localStorage` and restores defaults.
 
 These controls are tagged "Prototype only" and would not ship to the public build.
+
+Overlay navigation only ever offers days that are genuinely open: at the newest
+unlocked day the "next" control is absent rather than pointing at a locked day.
 
 ## Accessibility
 
@@ -111,6 +129,4 @@ supplied artwork would replace demo work:
   video all drop into the same slot).
 - `components/DayOverlay.tsx` — the per-day media slot inside the chapter.
 - `data/adventDays.ts` — all copy, scripture references, activities and deep links.
-
-Ambient sound is simulated: the toggle changes state and reports it, but no audio
-files are loaded.
+- `public/audio/` — the ambient bed, if the church would rather use their own.

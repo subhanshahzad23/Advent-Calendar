@@ -213,27 +213,41 @@ export function DayOverlay({
             </button>
 
             <div className="dayCard__nav">
-              <button
-                type="button"
-                className="navBtn"
-                disabled={prevDay === null}
-                onClick={() => prevDay && onNavigate(prevDay)}
-              >
-                <ArrowLeft size={14} />
-                {prevDay ? `Day ${prevDay}` : 'Day 1'}
-              </button>
+              {/* Neighbours are only ever real unlocked days. When the visitor
+                  is at either end of what is open, the control is replaced by a
+                  spacer rather than a disabled button pointing at a day that is
+                  not actually next. */}
+              {prevDay !== null ? (
+                <button
+                  type="button"
+                  className="navBtn"
+                  onClick={() => onNavigate(prevDay)}
+                  aria-label={`Go to day ${prevDay}, the previous open day`}
+                >
+                  <ArrowLeft size={14} />
+                  Day {prevDay}
+                </button>
+              ) : (
+                <span className="navBtn navBtn--spacer" aria-hidden />
+              )}
+
               <button type="button" className="navBtn" onClick={onClose}>
                 Return to the piazza
               </button>
-              <button
-                type="button"
-                className="navBtn"
-                disabled={nextDay === null}
-                onClick={() => nextDay && onNavigate(nextDay)}
-              >
-                {nextDay ? `Day ${nextDay}` : 'Day 24'}
-                <ArrowRight size={14} />
-              </button>
+
+              {nextDay !== null ? (
+                <button
+                  type="button"
+                  className="navBtn"
+                  onClick={() => onNavigate(nextDay)}
+                  aria-label={`Go to day ${nextDay}, the next open day`}
+                >
+                  Day {nextDay}
+                  <ArrowRight size={14} />
+                </button>
+              ) : (
+                <span className="navBtn navBtn--spacer" aria-hidden />
+              )}
             </div>
           </div>
         </div>

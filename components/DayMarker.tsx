@@ -110,6 +110,7 @@ export const DayMarker = forwardRef<HTMLButtonElement, DayMarkerProps>(function 
       type="button"
       className="marker"
       data-status={day.status}
+      data-current={day.isToday || undefined}
       data-just-opened={justOpened || undefined}
       data-day={day.day}
       style={

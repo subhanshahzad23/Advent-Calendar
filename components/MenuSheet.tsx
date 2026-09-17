@@ -1,6 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
+import { useEffect, useRef } from 'react';
 import { SCENE_STAGES } from '@/data/sceneConfig';
 import { useDialog } from '@/hooks/useDialog';
 import type {
@@ -26,6 +27,8 @@ const MODES: { id: DemoMode; label: string; hint: string }[] = [
 ];
 
 interface MenuSheetProps {
+  /** Opens the sheet scrolled to a particular section. */
+  jumpTo?: 'demo';
   days: ResolvedDay[];
   progress: ProgressState;
   sceneStage: ProgressStage;
@@ -43,6 +46,7 @@ interface MenuSheetProps {
 }
 
 export function MenuSheet({
+  jumpTo,
   days,
   progress,
   sceneStage,
@@ -59,8 +63,19 @@ export function MenuSheet({
   fallbackFocus,
 }: MenuSheetProps) {
   const ref = useDialog<HTMLDivElement>({ open: true, onClose, fallbackFocus });
+  const demoRef = useRef<HTMLElement>(null);
   const stageInfo = SCENE_STAGES[sceneStage - 1];
   const total = days.length;
+
+  // Opened from the scene's preview chip: land on the controls, not the top.
+  useEffect(() => {
+    if (jumpTo !== 'demo') return;
+    const t = window.setTimeout(
+      () => demoRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
+      120,
+    );
+    return () => window.clearTimeout(t);
+  }, [jumpTo]);
 
   return (
     <>
@@ -218,7 +233,7 @@ export function MenuSheet({
           </section>
 
           {/* --- Demo controls --------------------------------------------- */}
-          <section className="sheet__section">
+          <section className="sheet__section" ref={demoRef}>
             <div className="sheet__label" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               Demo preview <span className="protoTag">Prototype only</span>
             </div>

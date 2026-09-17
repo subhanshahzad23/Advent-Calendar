@@ -164,6 +164,12 @@ export function TownLayer({ view, lit }: TownProps) {
 
         {/* Rose window — day 13 */}
         <circle cx="600" cy="560" r="72" fill="#123055" stroke="#2f537e" strokeWidth="7" />
+        {/* The window warms as the community gathers, then brightens again
+            once day 13 itself has been opened. */}
+        <g className="rv3">
+          <circle cx="600" cy="560" r="120" fill="url(#roseGlow)" opacity="0.32" />
+          <circle cx="600" cy="560" r="66" fill="#f2b84b" opacity="0.26" />
+        </g>
         <g className={`zoneLit ${lit('rose-window') ? 'on' : ''}`}>
           <circle cx="600" cy="560" r="150" fill="url(#roseGlow)" opacity="0.55" />
           <circle cx="600" cy="560" r="66" fill="#f2b84b" opacity="0.5" />

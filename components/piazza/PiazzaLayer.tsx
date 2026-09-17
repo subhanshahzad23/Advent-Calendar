@@ -263,6 +263,23 @@ export function PiazzaLayer({ view, lit }: PiazzaProps) {
             />
           ))}
         </g>
+        {/* The square's lights start moving on the water in stage 2; opening
+            day 7 adds the candle reflections on top. */}
+        <g className="rv2">
+          {[0, 1, 2].map((i) => (
+            <ellipse
+              key={i}
+              className="vShimmer"
+              style={{ '--delay': `${i * 1.4}s` } as CSSProperties}
+              cx={1180 + (i - 1) * 62}
+              cy={1062 + i * 9}
+              rx={54 - i * 9}
+              ry="7"
+              fill="#8fb4d6"
+              opacity="0.3"
+            />
+          ))}
+        </g>
         <g className={`zoneLit ${lit('fountain') ? 'on' : ''}`}>
           {[0, 1, 2].map((i) => (
             <ellipse
@@ -348,6 +365,15 @@ export function PiazzaLayer({ view, lit }: PiazzaProps) {
           <path d="M1745 790l32 44-78 34z" />
           <path d="M1745 692l26 38-64 28z" />
         </g>
+        {/* Early in Advent the tree stands almost unlit; the cold scrim lifts
+            as the square warms. */}
+        <g className="treeScrim" fill="#10233f">
+          <path d="M1745 900l126 168h-252z" />
+          <path d="M1745 790l104 148h-208z" />
+          <path d="M1745 692l84 128h-168z" />
+          <path d="M1745 584l64 112h-128z" />
+        </g>
+        <ellipse className="treeBloom" cx="1745" cy="860" rx="300" ry="340" fill="url(#pool)" />
         {/* Tree star */}
         <g className="rv3">
           <circle cx="1745" cy="560" r="54" fill="url(#pool)" />
@@ -420,6 +446,23 @@ export function PiazzaLayer({ view, lit }: PiazzaProps) {
       </g>
 
       {/* ---- String lights across the square ----------------------------- */}
+      {/* The wire is hung from the start; the lamps come on in stage 2. */}
+      <g className="rv1">
+        <path
+          d={catenary(902, 792, 1240, 786, 74)}
+          fill="none"
+          stroke="#0f2743"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path
+          d={catenary(1240, 786, 1676, 770, 82)}
+          fill="none"
+          stroke="#0f2743"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+      </g>
       <StringLights
         d={catenary(902, 792, 1240, 786, 74)}
         bulbs={bulbsAlong(902, 792, 1240, 786, 74, 7)}

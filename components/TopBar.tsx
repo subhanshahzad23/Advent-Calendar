@@ -7,6 +7,7 @@ interface TopBarProps {
   completedCount: number;
   total: number;
   soundOn: boolean;
+  soundBlocked: boolean;
   onToggleSound: () => void;
   onOpenMenu: () => void;
   menuButtonRef: React.RefObject<HTMLButtonElement | null>;
@@ -20,6 +21,7 @@ export function TopBar({
   completedCount,
   total,
   soundOn,
+  soundBlocked,
   onToggleSound,
   onOpenMenu,
   menuButtonRef,
@@ -64,10 +66,11 @@ export function TopBar({
           className="iconBtn"
           aria-pressed={soundOn}
           onClick={onToggleSound}
-          title="Ambient sound (simulated in this prototype)"
+          title={soundOn ? 'Turn ambient sound off' : 'Turn ambient sound on'}
         >
           <span className="srOnly">
-            {soundOn ? 'Turn ambient sound off' : 'Turn ambient sound on'} (simulated)
+            {soundOn ? 'Turn ambient sound off' : 'Turn ambient sound on'}
+            {soundBlocked ? '. Playback was blocked by the browser.' : ''}
           </span>
           {soundOn ? (
             <span className="eq" aria-hidden>

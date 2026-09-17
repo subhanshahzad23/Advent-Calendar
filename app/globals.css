@@ -578,6 +578,9 @@ a {
   pointer-events: none;
   overflow: hidden;
   z-index: 22;
+  /* Faint at first, gathering as the season goes on. */
+  opacity: calc(0.42 + var(--warmth) * 0.58);
+  transition: opacity 2.6s var(--ease);
 }
 
 .flake {
@@ -631,12 +634,12 @@ a {
   z-index: 21;
   mix-blend-mode: screen;
   background: radial-gradient(
-    50% 60% at 50% 72%,
-    rgba(242, 184, 75, calc(0.1 + var(--warmth) * 0.3)),
-    rgba(232, 135, 53, calc(var(--warmth) * 0.1)) 45%,
-    transparent 72%
+    52% 62% at 50% 72%,
+    rgba(242, 184, 75, calc(0.06 + var(--warmth) * 0.42)),
+    rgba(232, 135, 53, calc(0.02 + var(--warmth) * 0.2)) 45%,
+    transparent 74%
   );
-  transition: background 2.4s var(--ease);
+  transition: background 2.6s var(--ease);
 }
 
 /* Floating motes near the lanterns. */
@@ -752,9 +755,21 @@ a {
 .rv3,
 .rv4 {
   opacity: 0;
-  transition: opacity 1.6s var(--ease), transform 1.6s var(--ease);
+  transition: opacity 1.7s var(--ease), transform 1.7s var(--ease);
   transition-delay: var(--d, 0s);
-  transform: translateY(10px);
+  transform: translateY(14px) scale(0.985);
+  transform-origin: center bottom;
+}
+
+/* Each tier lags the one before it, so a stage change reads as the square
+   waking up in waves rather than everything appearing at once. */
+[data-stage] .rv1 { --tier-delay: 0s; }
+[data-stage] .rv2 { --tier-delay: 0.22s; }
+[data-stage] .rv3 { --tier-delay: 0.44s; }
+[data-stage] .rv4 { --tier-delay: 0.66s; }
+
+.rv1, .rv2, .rv3, .rv4 {
+  transition-delay: calc(var(--d, 0s) + var(--tier-delay, 0s));
 }
 
 [data-stage='1'] .rv1,
@@ -827,6 +842,37 @@ a {
   50% { opacity: 1; }
 }
 
+/* The great star: slow rotation on the rays, a steady breath on the core. */
+.greatStar__rays {
+  transform-origin: 900px 205px;
+  animation: starTurn 90s linear infinite;
+}
+
+@keyframes starTurn {
+  to { transform: rotate(360deg); }
+}
+
+.greatStar__core {
+  transform-origin: 900px 205px;
+  animation: starBreath 7s var(--ease-soft) infinite;
+}
+
+@keyframes starBreath {
+  0%, 100% { transform: scale(0.94); opacity: 0.88; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+/* The tree: cold and unlit early, blooming warm by Christmas Eve. */
+.treeScrim {
+  opacity: calc(0.62 - var(--warmth) * 0.62);
+  transition: opacity 2.8s var(--ease);
+}
+
+.treeBloom {
+  opacity: calc(var(--warmth) * var(--warmth) * 0.8);
+  transition: opacity 2.8s var(--ease);
+}
+
 /* Fountain reflection ripples. */
 .ripple {
   transform-origin: center;
@@ -842,8 +888,8 @@ a {
 
 /* Light spilling onto the cobbles. */
 .spill {
-  opacity: calc(0.15 + var(--warmth) * 0.6);
-  transition: opacity 2.4s var(--ease);
+  opacity: calc(0.08 + var(--warmth) * 0.82);
+  transition: opacity 2.6s var(--ease);
 }
 
 /* A day the visitor has opened lights its own corner of the square. */
@@ -889,8 +935,11 @@ a {
 }
 
 .marker:hover .marker__body,
-.marker:focus-visible .marker__body {
+.marker:focus-visible .marker__body,
+.marker[data-current='true']:hover .marker__body,
+.marker[data-current='true']:focus-visible .marker__body {
   transform: scale(1.18);
+  animation: none;
 }
 
 .marker:active .marker__body {
@@ -939,10 +988,25 @@ a {
   transition: opacity 0.5s var(--ease);
 }
 
-.marker[data-status='available'] .marker__halo {
+/* Any open day carries a soft warmth; only the day the journey has actually
+   reached breathes. Twenty-four pulsing markers would be noise. */
+.marker[data-status='available'] .marker__halo,
+.marker[data-status='opened'] .marker__halo {
+  opacity: 0.4;
+}
+
+.marker[data-current='true'] .marker__halo {
   opacity: 1;
-  animation: breathe 3.8s var(--ease-soft) infinite;
-  animation-delay: var(--delay, 0s);
+  animation: breathe 4.6s var(--ease-soft) infinite;
+}
+
+.marker[data-current='true'] .marker__body {
+  animation: currentLift 4.6s var(--ease-soft) infinite;
+}
+
+@keyframes currentLift {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.04); }
 }
 
 @keyframes breathe {
@@ -1811,6 +1875,12 @@ a {
   cursor: not-allowed;
 }
 
+/* Holds the footer layout when a neighbouring day does not exist. */
+.navBtn--spacer {
+  pointer-events: none;
+  visibility: hidden;
+}
+
 .completeBtn {
   position: relative;
   overflow: hidden;
@@ -1899,60 +1969,61 @@ a {
 /* ---------------------------------------------------------------------------
    11  DEMO UTILITY BAR, TOASTS & RESOURCE PANEL
    --------------------------------------------------------------------------- */
-.utilBar {
+/* A deliberately quiet marker of the demo mode. It sits back until you look
+   for it, and opens the real controls in the journey menu. */
+.demoChip {
   position: absolute;
   z-index: 48;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  display: flex;
+  right: 14px;
+  bottom: 14px;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 8px 7px 13px;
+  padding: 7px 13px 7px 11px;
   border-radius: 999px;
-  background: rgba(8, 17, 32, 0.74);
-  border: 1px solid rgba(217, 141, 124, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 14px 40px rgba(4, 9, 18, 0.45);
-  animation: fadeUp 0.8s var(--ease) 0.5s both;
-  max-width: calc(100vw - 24px);
+  border: 1px solid rgba(175, 198, 217, 0.16);
+  background: rgba(8, 17, 32, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: rgba(247, 242, 233, 0.55);
+  opacity: 0.72;
+  transition: opacity 0.35s var(--ease), border-color 0.35s var(--ease),
+    color 0.35s var(--ease), background 0.35s var(--ease);
+  animation: fadeUp 0.9s var(--ease) 0.7s both;
 }
 
-.utilBar__tag {
-  font-size: 9px;
-  letter-spacing: 0.16em;
+.demoChip:hover,
+.demoChip:focus-visible {
+  opacity: 1;
+  color: var(--cream);
+  border-color: rgba(242, 184, 75, 0.4);
+  background: rgba(8, 17, 32, 0.78);
+}
+
+.demoChip__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blush);
+  box-shadow: 0 0 8px rgba(217, 141, 124, 0.8);
+}
+
+.demoChip__mode {
   text-transform: uppercase;
-  color: #eebbaf;
-  white-space: nowrap;
   font-weight: 600;
 }
 
-.utilBar__sep {
+.demoChip__sep {
   width: 1px;
-  height: 18px;
-  background: rgba(175, 198, 217, 0.2);
+  height: 11px;
+  background: rgba(175, 198, 217, 0.24);
 }
 
-.chip {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: rgba(247, 242, 233, 0.76);
-  border: 1px solid transparent;
-  white-space: nowrap;
-  transition: background 0.25s var(--ease), color 0.25s var(--ease);
-}
-
-.chip:hover {
-  background: rgba(175, 198, 217, 0.12);
-}
-
-.chip[aria-pressed='true'] {
-  background: rgba(242, 184, 75, 0.18);
-  border-color: rgba(242, 184, 75, 0.38);
+.demoChip__value {
   color: var(--gold);
+  letter-spacing: 0.04em;
 }
 
 .toastWrap {
@@ -2119,6 +2190,31 @@ a {
   0% { opacity: 0; transform: translateY(42px) scale(0.3); }
   55% { opacity: 1; }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.vBow {
+  transform-origin: 327px 196px;
+  animation: vBow 3.6s var(--ease-soft) infinite;
+}
+
+@keyframes vBow {
+  0%, 100% { transform: rotate(-2.4deg) translate(-4px, 1px); }
+  50% { transform: rotate(2.4deg) translate(4px, -1px); }
+}
+
+.vStarRays {
+  transform-origin: 264px 70px;
+  animation: starTurn 70s linear infinite;
+}
+
+/* Arrives after the star has finished rising, and stays. */
+.vAfterglow {
+  opacity: 0;
+  animation: vAfterglow 2.4s var(--ease) 1.6s forwards;
+}
+
+@keyframes vAfterglow {
+  to { opacity: 1; }
 }
 
 /* 02 candle-light ----------------------------------------------------------- */
@@ -2612,20 +2708,9 @@ a {
   /* Tooltips would crowd a phone: the day list in the menu carries the labels. */
   .marker__label { display: none; }
 
-  .utilBar {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    transform: none;
-    max-width: none;
-    overflow-x: auto;
-    scrollbar-width: none;
-    justify-content: flex-start;
-  }
+  .demoChip { right: 10px; bottom: 10px; }
 
-  .utilBar::-webkit-scrollbar { display: none; }
-
-  .exploreHint { bottom: 72px; }
+  .exploreHint { bottom: 64px; }
 
   /* Daily experience becomes a bottom sheet. */
   .dayModal { place-items: end center; padding: 0; }
@@ -2685,7 +2770,8 @@ a {
   .progressPill__text b { display: inline; }
   .dayCard__title { font-size: 24px; }
   .scriptureBlock__line { font-size: 15px; }
-  .utilBar__tag { display: none; }
+  .demoChip__mode { display: none; }
+  .demoChip__sep { display: none; }
 }
 
 @media (min-width: 1440px) {
@@ -2701,7 +2787,7 @@ a {
 
 /* Short landscape phones: keep the square visible. */
 @media (max-height: 520px) and (max-width: 950px) {
-  .utilBar { bottom: 8px; padding: 5px 6px 5px 10px; }
+  .demoChip { bottom: 8px; }
   .exploreHint { display: none; }
   .dayCard__stage { aspect-ratio: 16 / 6; }
 }
@@ -2764,12 +2850,15 @@ a {
 [data-calm='true'] .sway,
 [data-calm='true'] .bulb,
 [data-calm='true'] .ripple,
-[data-calm='true'] .marker[data-status='available'] .marker__halo,
+[data-calm='true'] .marker[data-current='true'] .marker__halo,
+[data-calm='true'] .marker[data-current='true'] .marker__body,
 [data-calm='true'] .vgPulse,
 [data-calm='true'] .vgFloat,
 [data-calm='true'] .vgSpin,
 [data-calm='true'] .vSteam,
 [data-calm='true'] .vNote,
+[data-calm='true'] .vBow,
+[data-calm='true'] .vStarRays,
 [data-calm='true'] .vSnowDot,
 [data-calm='true'] .vShimmer,
 [data-calm='true'] .vDrop,
@@ -2787,6 +2876,9 @@ a {
 [data-calm='true'] .vStarBright,
 [data-calm='true'] .vRevealGlow,
 [data-calm='true'] .vOrnGlow,
+[data-calm='true'] .greatStar__rays,
+[data-calm='true'] .greatStar__core,
+[data-calm='true'] .marker[data-current='true'] .marker__body,
 [data-calm='true'] .vRay,
 [data-calm='true'] .vHandMin,
 [data-calm='true'] .vHandHour,
@@ -2794,7 +2886,7 @@ a {
   animation: none !important;
 }
 
-[data-calm='true'] .marker[data-status='available'] .marker__halo { opacity: 0.85; }
+[data-calm='true'] .marker[data-current='true'] .marker__halo { opacity: 1; }
 [data-calm='true'] .bulb { opacity: 1; }
 [data-calm='true'] .vHandMin { transform: rotate(360deg); }
 [data-calm='true'] .vHandHour { transform: rotate(0deg); }

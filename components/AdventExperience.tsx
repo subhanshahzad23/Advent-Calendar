@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TOTAL_DAYS } from '@/data/adventDays';
 import { useAdventProgress } from '@/hooks/useAdventProgress';
+import { useAmbientAudio } from '@/hooks/useAmbientAudio';
 import { useIsCompact, useReducedMotion } from '@/hooks/useMediaQuery';
 import { nextUnlockedDay, prevUnlockedDay } from '@/lib/progress';
 import type { LanguageCode, ResolvedDay } from '@/types/advent';
 import { DayOverlay } from './DayOverlay';
-import { DemoBar } from './DemoBar';
+import { DemoChip } from './DemoChip';
 import { IntroSequence } from './IntroSequence';
 import { MenuSheet } from './MenuSheet';
 import { PiazzaScene } from './piazza/PiazzaScene';
@@ -31,7 +32,8 @@ export function AdventExperience() {
   const calm = progress.calmMotion || systemReduced;
 
   const [entered, setEntered] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [introResolved, setIntroResolved] = useState(false);
+  const [menuOpen, setMenuOpen] = useState<false | 'top' | 'demo'>(false);
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [justOpened, setJustOpened] = useState<number | null>(null);
   const [focusDay, setFocusDay] = useState<number | null>(null);
@@ -39,6 +41,12 @@ export function AdventExperience() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  const audio = useAmbientAudio({
+    enabled: ready && progress.soundOn,
+    onEnabledChange: (next) => advent.patch({ soundOn: next }),
+  });
+
   const markerRefs = useRef(new Map<number, HTMLButtonElement | null>());
 
   const registerMarker = useCallback((day: number, node: HTMLButtonElement | null) => {
@@ -76,7 +84,16 @@ export function AdventExperience() {
     [activeDay],
   );
 
-  /* --- intro ------------------------------------------------------------- */
+  /* --- intro: a fresh-visit moment only ---------------------------------- */
+  useEffect(() => {
+    if (!ready) return;
+    // Both updates land in one commit, so a returning visitor never sees the
+    // intro flash before it is dismissed.
+    if (progress.hasEntered) setEntered(true);
+    setIntroResolved(true);
+  }, [ready, progress.hasEntered]);
+
+
   const handleEnter = useCallback(() => {
     setEntered(true);
     advent.patch({ hasEntered: true });
@@ -122,37 +139,35 @@ export function AdventExperience() {
             unlockedCount={advent.unlockedCount}
             completedCount={advent.completedCount}
             total={TOTAL_DAYS}
-            soundOn={progress.soundOn}
+            soundOn={audio.playing}
+            soundBlocked={audio.blocked}
             menuButtonRef={menuButtonRef}
-            onOpenMenu={() => setMenuOpen(true)}
-            onToggleSound={() => {
-              advent.patch({ soundOn: !progress.soundOn });
+            onOpenMenu={() => setMenuOpen('top')}
+            onToggleSound={async () => {
+              const wasPlaying = audio.playing;
+              await audio.toggle();
+              if (wasPlaying) return;
               toast(
-                progress.soundOn
-                  ? 'Ambient sound off.'
-                  : 'Ambient sound on — simulated for this prototype, no audio files are loaded.',
+                audio.blocked
+                  ? 'Ambient sound could not start — check the browser\u2019s sound settings.'
+                  : 'Ambient sound on — “Snowfall” by Scott Buckley (CC BY 4.0).',
               );
             }}
           />
 
-          <DemoBar
+          <DemoChip
             progress={progress}
-            onSetMode={(mode) => {
-              advent.setDemoMode(mode);
-              if (mode === 'today' && advent.realUnlocked === 0) {
-                toast('Today mode: outside December, so no days are unlocked yet.');
-              }
-            }}
-            onSetSimulatedDay={(d) => advent.setSimulatedDay(d)}
-            onReset={handleReset}
+            unlockedCount={advent.unlockedCount}
+            onOpenControls={() => setMenuOpen('demo')}
           />
         </>
       )}
 
-      {!entered && <IntroSequence onEnter={handleEnter} reduced={systemReduced} />}
+      {introResolved && !entered && <IntroSequence onEnter={handleEnter} reduced={calm} />}
 
       {menuOpen && (
         <MenuSheet
+          jumpTo={menuOpen === 'demo' ? 'demo' : undefined}
           days={days}
           progress={progress}
           sceneStage={advent.sceneStage}
@@ -209,6 +224,19 @@ export function AdventExperience() {
       )}
 
       <Toasts items={toasts} />
+
+      {/*
+        Ambient bed. `preload="none"` means the file costs nothing until the
+        visitor asks for sound, and there is no autoplay attribute anywhere.
+        Credit: “Snowfall” by Scott Buckley, CC BY 4.0 — see CREDITS.md.
+      */}
+      <audio
+        ref={audio.audioRef}
+        src="/audio/snowfall-scott-buckley.mp3"
+        loop
+        preload="none"
+        aria-hidden="true"
+      />
     </div>
   );
 }

@@ -30,12 +30,28 @@ function StarRise() {
         <path d="M600 308v-84l-120-34-70 40v78z" />
       </g>
       <path d="M248 176h32v34h-32z" fill="#f2b84b" opacity="0.85" className="flicker" />
+      {/* The glow settles in behind the star and stays. */}
+      <ellipse className="vAfterglow" cx="264" cy="96" rx="210" ry="170" fill="url(#vgGlow)" />
       <g className="vStar">
-        <circle cx="264" cy="70" r="54" fill="#f2b84b" opacity="0.2" />
-        <circle cx="264" cy="70" r="26" fill="#f2b84b" opacity="0.28" />
+        <circle cx="264" cy="70" r="70" fill="url(#vgGlow)" />
+        <g className="vStarRays">
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const a = (i * Math.PI) / 3;
+            return (
+              <path
+                key={i}
+                d={`M264 70L${(264 + Math.cos(a) * 120).toFixed(1)} ${(70 + Math.sin(a) * 120).toFixed(1)}`}
+                stroke="#f2b84b"
+                strokeWidth={i % 2 ? 1.4 : 2.6}
+                strokeLinecap="round"
+                opacity="0.4"
+              />
+            );
+          })}
+        </g>
         <path d="M264 34l9 22 23 8-23 8-9 22-9-22-23-8 23-8z" fill="#ffd98a" />
       </g>
-      <path d="M264 96v190" stroke="#f2b84b" strokeWidth="2" opacity="0.18" />
+      <path className="vAfterglow" d="M264 96v190" stroke="#f2b84b" strokeWidth="2.5" opacity="0.2" />
     </Frame>
   );
 }
@@ -434,8 +450,12 @@ function MusicDrift() {
         <path d="M326 162v42M332 160v46M338 162v42" stroke="#e8d7b6" strokeWidth="1.4" opacity="0.8" />
         <path d="M322 190q10 6 20 0" stroke="#3a2010" strokeWidth="2" fill="none" />
       </g>
-      <path d="M286 174l82 44" stroke="#e8d7b6" strokeWidth="3" strokeLinecap="round" />
-      <path d="M286 174l82 44" stroke="#3a2a1a" strokeWidth="1.2" strokeLinecap="round" />
+      {/* The bow draws slowly across the strings. */}
+      <g className="vBow">
+        <path d="M286 174l82 44" stroke="#e8d7b6" strokeWidth="3.4" strokeLinecap="round" />
+        <path d="M286 174l82 44" stroke="#3a2a1a" strokeWidth="1.2" strokeLinecap="round" />
+        <circle cx="286" cy="174" r="3.4" fill="#5b3418" />
+      </g>
 
       {notes.map((n, i) => (
         <g

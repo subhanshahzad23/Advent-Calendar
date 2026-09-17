@@ -6,7 +6,10 @@ import { ArrowRight } from './Icons';
 
 /**
  * A short cinematic opening: star, bell tower, title, then the piazza.
- * Roughly 1.8s when motion is allowed, immediate for reduced-motion visitors.
+ *
+ * Shown on a fresh visit only. With reduced motion the card is presented
+ * statically — the global media query removes the animation, and it simply
+ * holds long enough to be read before handing over to the square.
  */
 export function IntroSequence({
   onEnter,
@@ -23,12 +26,12 @@ export function IntroSequence({
     if (done.current) return;
     done.current = true;
     setLeaving(true);
-    window.setTimeout(onEnter, reduced ? 60 : 800);
+    window.setTimeout(onEnter, reduced ? 80 : 800);
   };
 
   // The sequence plays itself out, but a click or a key enters straight away.
   useEffect(() => {
-    const t = window.setTimeout(finish, reduced ? 700 : 4200);
+    const t = window.setTimeout(finish, reduced ? 2400 : 4200);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') finish();
     };

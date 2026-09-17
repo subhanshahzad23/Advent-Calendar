@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { LAYER_DEPTH, type SceneBox } from '@/data/sceneConfig';
-import { seeded } from '@/lib/seed';
+import { onCircle, seeded } from '@/lib/seed';
 import { LayerSvg } from './LayerSvg';
 
 const STARS = Array.from({ length: 74 }, (_, i) => ({
@@ -48,6 +48,12 @@ export function SkyLayer({ view }: { view: SceneBox }) {
           <stop offset="100%" stopColor="#24446d" />
         </linearGradient>
 
+        <radialGradient id="starBloom" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff7e7" stopOpacity="0.62" />
+          <stop offset="26%" stopColor="#f2b84b" stopOpacity="0.26" />
+          <stop offset="62%" stopColor="#e88735" stopOpacity="0.07" />
+          <stop offset="100%" stopColor="#e88735" stopOpacity="0" />
+        </radialGradient>
         <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#2b4f7a" />
           <stop offset="100%" stopColor="#1b3557" />
@@ -104,6 +110,44 @@ export function SkyLayer({ view }: { view: SceneBox }) {
         fill="#dce8f2"
         opacity="0.3"
       />
+
+      {/*
+        The Christmas Eve star. It only arrives in the final stage, and when it
+        does it is the brightest thing in the composition — everything else in
+        the square is lit warm, this one light is lit white.
+      */}
+      <g className="rv4 greatStar">
+        <circle cx="900" cy="205" r="330" fill="url(#starBloom)" />
+        <g className="greatStar__rays">
+          {Array.from({ length: 12 }, (_, i) => {
+            const a = (i * Math.PI) / 6;
+            const len = i % 3 === 0 ? 300 : 190;
+            const tip = onCircle(900, 205, len, a);
+            return (
+              <path
+                key={i}
+                d={`M900 205L${tip.x} ${tip.y}`}
+                stroke="#f2b84b"
+                strokeWidth={i % 3 === 0 ? 3.5 : 1.8}
+                strokeLinecap="round"
+                opacity="0.45"
+              />
+            );
+          })}
+        </g>
+        <g className="greatStar__core">
+          <path
+            d="M900 132l17 46 46 17-46 17-17 46-17-46-46-17 46-17z"
+            fill="#fff7e7"
+          />
+          <path
+            d="M900 160l8 30 30 8-30 8-8 30-8-30-30-8 30-8z"
+            fill="#fff"
+            opacity="0.9"
+          />
+        </g>
+        <path d="M900 260v560" stroke="#f2b84b" strokeWidth="2.5" opacity="0.1" />
+      </g>
 
       {/* Far silhouette of the cathedral quarter, behind the town. */}
       <g fill="#142c4c" opacity="0.62">
